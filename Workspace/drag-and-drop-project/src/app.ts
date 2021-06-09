@@ -42,11 +42,46 @@ class ProjectInput {
     this.attach();
   }
 
+  // return tuple of exactly 3 elements of exactly specified types
+  // or return void which is same as undefined but used with function return types
+  private gatherUserInput(): [string, string, number] | void {
+    const enteredTitle = this.titleInputElement.value;
+    const enteredDescription = this.descriptionInputElement.value;
+    const enteredPeople = this.peopleInputElement.value;
+
+    // trivial validation
+    if (
+      enteredTitle.trim().length === 0 ||
+      enteredDescription.trim().length === 0 ||
+      enteredPeople.trim().length === 0
+    ) {
+      alert('Invalid Input, Please try again!');
+      return; // undefined
+    } else {
+      return [enteredTitle, enteredDescription, +enteredPeople];
+    }
+  }
+
+  private clearInput() {
+    this.titleInputElement.value = '';
+    this.descriptionInputElement.value = '';
+    this.peopleInputElement.value = '';
+  }
+
+  // using our decorator
   @autobind
   private submitHandler(event: Event) {
     // get access to the input element values
     event.preventDefault(); // to prevent default form submission which submits an HTTP request
-    console.log(this.titleInputElement.value);
+    const userInput = this.gatherUserInput();
+
+    // tuple is in the end just array. So we can use Array.isArray to check if we got undefined or an array
+    if (Array.isArray(userInput)) {
+      const [title, description, people] = userInput; // using destructuring
+      console.log(title, description, people);
+      // clear user entered inputs
+      this.clearInput();
+    }
   }
 
   // setup event listeners
