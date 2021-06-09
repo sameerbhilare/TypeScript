@@ -1,3 +1,21 @@
+// Autobind decorator - A method decorator
+// decorator, which we can add, which automatically binds to 'this' key word
+// so that we don't have to call bind() in the addEventListener
+// The first and second parameters are not used so TS gives compiation error.
+// Hence using underscore as a special syntax which TS understands and hence does not complain
+function autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
+  const originalMethod = descriptor.value; // store the method which we originally defined.
+  const adjustedDescriptor: PropertyDescriptor = {
+    configurable: true,
+    get() {
+      const boundFn = originalMethod.bind(this);
+      return boundFn;
+    },
+  };
+  return adjustedDescriptor;
+}
+
+// ProjectInput class
 class ProjectInput {
   templateElement: HTMLTemplateElement;
   hostElement: HTMLDivElement;
@@ -24,6 +42,7 @@ class ProjectInput {
     this.attach();
   }
 
+  @autobind
   private submitHandler(event: Event) {
     // get access to the input element values
     event.preventDefault(); // to prevent default form submission which submits an HTTP request
@@ -32,12 +51,14 @@ class ProjectInput {
 
   // setup event listeners
   private configure() {
-    /* if bind() is not used, then 'this' inside of submitHandler() function will point to 
-    event.target element. This is how JS works in event handling.
-    By using bind(this), 'this' inside submitHandler() function will point to this class's instance.
-      
+    /* 
+        if bind() is not used, then 'this' inside of submitHandler() function will point to 
+        event.target element. This is how JS works in event handling.
+        By using bind(this), 'this' inside submitHandler() function will point to this class's instance.      
     */
-    this.element.addEventListener('submit', this.submitHandler.bind(this));
+    //this.element.addEventListener('submit', this.submitHandler.bind(this));
+
+    this.element.addEventListener('submit', this.submitHandler); // bind not required because of our custom decorator
   }
 
   private attach() {
