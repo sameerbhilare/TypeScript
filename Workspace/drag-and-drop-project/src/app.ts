@@ -88,6 +88,23 @@ class ProjectState extends State<Project> {
     this.projects.push(newProject);
 
     // call the listeners
+    this.updateListeners();
+  }
+
+  // switch project status
+  moveProject(projectId: string, newStatus: ProjectStatus) {
+    const project = this.projects.find((prj) => prj.id === projectId);
+
+    // check if status really changed or user just dragged and dropped in the same section, to avoid unnecessary rerender cycle
+    if (project && project.status !== newStatus) {
+      project.status = newStatus;
+      // call the listeners
+      this.updateListeners();
+    }
+  }
+
+  // call the listeners
+  updateListeners() {
     for (const listenerFn of this.listeners) {
       listenerFn(this.projects.slice()); // send a copy of projects
     }
@@ -275,7 +292,11 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> implements Drag
   @autobind
   dropHandler(event: DragEvent): void {
     // this will execute only if event.preventDefault(); in dragOverHandler() is called
-    console.log(event.dataTransfer!.getData('text/plain'));
+    const prjId = event.dataTransfer!.getData('text/plain');
+    projectState.moveProject(
+      prjId,
+      this.type === 'active' ? ProjectStatus.Active : ProjectStatus.Finished
+    );
   }
 
   @autobind
