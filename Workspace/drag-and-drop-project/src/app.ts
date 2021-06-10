@@ -210,7 +210,17 @@ class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> implements 
 
   @autobind
   dragStartHandler(event: DragEvent): void {
-    console.log(event);
+    // dataTransfer is special property for DragEvent
+    // on that dataTransfer property you can attach data to the drag event
+    // and you'll later be able to extract that data upon a drop.
+    // And the browser and JavaScript behind the scenes will store that data during the drag operation
+    // and ensure that the data you get when the drop happens, it's the same data you attach here.
+    event.dataTransfer!.setData('text/plain', this.project.id);
+
+    // This basically controls how the cursor will look like
+    // and tells the browser a little bit about our intention that we plan to move an element from A to B
+    // and alternative could be copy, where you then get a different cursor, which indicates to the user that you're copying and not moving.
+    event.dataTransfer!.effectAllowed = 'move';
   }
 
   @autobind
@@ -246,13 +256,27 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> implements Drag
   }
 
   @autobind
-  dragOverHandler(_: DragEvent): void {
-    const listEl = this.element.querySelector('ul');
-    listEl?.classList.add('droppable');
+  dragOverHandler(event: DragEvent): void {
+    // allowing dropping of plain text
+    if (event.dataTransfer && event.dataTransfer.types[0] === 'text/plain') {
+      // In JavaScript, drag and drop works such that a drop event will only trigger on an element
+      // if in the dragover handler on that same element you called prevent default.
+
+      // The default for JavaScript drag and drop events is to not allow dropping.
+      // So you have to prevent default in the drag over handler to tell JavaScript into browser
+      // that for this element you want to allow a drop.
+      event.preventDefault();
+
+      const listEl = this.element.querySelector('ul');
+      listEl?.classList.add('droppable');
+    }
   }
 
   @autobind
-  dropHandler(_: DragEvent): void {}
+  dropHandler(event: DragEvent): void {
+    // this will execute only if event.preventDefault(); in dragOverHandler() is called
+    console.log(event.dataTransfer!.getData('text/plain'));
+  }
 
   @autobind
   dragLeaveHandler(_: DragEvent): void {
