@@ -1,3 +1,43 @@
+// Project State Management
+// Singleton class
+class ProjectState {
+  // whenever something changes in the application state (projects), we call our listeners
+  private listeners: any[] = [];
+  private projects: any[] = [];
+  private static instance: ProjectState;
+
+  private constructor() {}
+
+  public static getInstance() {
+    if (this.instance) {
+      return this.instance;
+    }
+    this.instance = new ProjectState();
+    return this.instance;
+  }
+
+  public addListener(listenerFn: Function) {
+    this.listeners.push(listenerFn);
+  }
+
+  public addProject(title: string, description: string, numOfPeople: number) {
+    const newProject = {
+      id: Math.random().toString(),
+      title: title,
+      description: description,
+      people: numOfPeople,
+    };
+    this.projects.push(newProject);
+    // call the listeners
+    for (const listenerFn of this.listeners) {
+      listenerFn(this.projects.slice()); // send a copy of projects
+    }
+  }
+}
+
+// global singleton instance of ProjectState
+const projectState = ProjectState.getInstance();
+
 // validation
 // defining structure of the validatable object
 interface Validatable {
@@ -12,7 +52,6 @@ interface Validatable {
 
 function validate(validatable: Validatable) {
   let isValid = true;
-  console.log(validatable);
 
   if (validatable.required) {
     isValid = isValid && validatable.value.toString().trim().length !== 0;
@@ -28,7 +67,6 @@ function validate(validatable: Validatable) {
   }
   if (validatable.max != null && typeof validatable.value === 'number') {
     isValid = isValid && validatable.value <= validatable.max;
-    console.log('max', validatable.value, isValid);
   }
 
   return isValid;
@@ -56,11 +94,13 @@ class ProjectList {
   templateElement: HTMLTemplateElement;
   hostElement: HTMLDivElement;
   element: HTMLElement;
+  assignedProjects: any[];
 
   // literal type
   constructor(private type: 'active' | 'finished') {
     this.templateElement = document.getElementById('project-list') as HTMLTemplateElement;
     this.hostElement = document.getElementById('app') as HTMLDivElement;
+    this.assignedProjects = [];
 
     // render the form
     // this.templateElement.content gives us whatever inside of <template> tag
@@ -68,8 +108,23 @@ class ProjectList {
     this.element = importedNode.firstElementChild as HTMLElement; // get element from node
     this.element.id = `${this.type}-projects`; // for proper css
 
+    // register listener for projectstate
+    projectState.addListener((projects: any[]) => {
+      this.assignedProjects = projects;
+      this.renderProjects();
+    });
+
     this.attach();
     this.renderContent();
+  }
+
+  private renderProjects() {
+    const listEl = document.getElementById(`${this.type}-projects-list`)! as HTMLUListElement;
+    for (const prjItem of this.assignedProjects) {
+      const listItem = document.createElement('li');
+      listItem.textContent = prjItem.title;
+      listEl.appendChild(listItem);
+    }
   }
 
   private renderContent() {
@@ -160,6 +215,8 @@ class ProjectInput {
     if (Array.isArray(userInput)) {
       const [title, description, people] = userInput; // using destructuring
       console.log(title, description, people);
+      // add to global projects
+      projectState.addProject(title, description, people);
       // clear user entered inputs
       this.clearInput();
     }
