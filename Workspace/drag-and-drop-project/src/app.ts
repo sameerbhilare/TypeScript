@@ -1,9 +1,30 @@
+// Project type
+enum ProjectStatus {
+  Active,
+  Finished,
+}
+
+// Project class
+// using class not interface because we want to instantiate it
+class Project {
+  constructor(
+    public id: string,
+    public title: string,
+    public description: string,
+    public people: number,
+    public status: ProjectStatus
+  ) {}
+}
+
+// listener type - any function which receives Project array and returns void
+type Listener = (items: Project[]) => void;
+
 // Project State Management
 // Singleton class
 class ProjectState {
   // whenever something changes in the application state (projects), we call our listeners
-  private listeners: any[] = [];
-  private projects: any[] = [];
+  private listeners: Listener[] = [];
+  private projects: Project[] = [];
   private static instance: ProjectState;
 
   private constructor() {}
@@ -16,17 +37,18 @@ class ProjectState {
     return this.instance;
   }
 
-  public addListener(listenerFn: Function) {
+  public addListener(listenerFn: Listener) {
     this.listeners.push(listenerFn);
   }
 
   public addProject(title: string, description: string, numOfPeople: number) {
-    const newProject = {
-      id: Math.random().toString(),
-      title: title,
-      description: description,
-      people: numOfPeople,
-    };
+    const newProject: Project = new Project(
+      Math.random().toString(),
+      title,
+      description,
+      numOfPeople,
+      ProjectStatus.Active // every new project is by default is Active
+    );
     this.projects.push(newProject);
     // call the listeners
     for (const listenerFn of this.listeners) {
@@ -94,7 +116,7 @@ class ProjectList {
   templateElement: HTMLTemplateElement;
   hostElement: HTMLDivElement;
   element: HTMLElement;
-  assignedProjects: any[];
+  assignedProjects: Project[];
 
   // literal type
   constructor(private type: 'active' | 'finished') {
@@ -109,7 +131,7 @@ class ProjectList {
     this.element.id = `${this.type}-projects`; // for proper css
 
     // register listener for projectstate
-    projectState.addListener((projects: any[]) => {
+    projectState.addListener((projects: Project[]) => {
       this.assignedProjects = projects;
       this.renderProjects();
     });
