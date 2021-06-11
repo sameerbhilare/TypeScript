@@ -1,6 +1,8 @@
 const path = require('path');
 
 module.exports = {
+  mode: 'development',
+
   entry: './src/app.ts', // root entry file of project
 
   output: {
@@ -10,6 +12,11 @@ module.exports = {
 
     // this path should match tsconfig.json -> outDir. But here we need absoute path
     path: path.resolve(__dirname, 'dist'),
+
+    // This additional configuration is needed for the webpack dev server to really understand
+    // where the output is written to and where it is relative to the index.html file
+    // because by default, the webpack dev server serves an index.html file it finds in the same folder as you run npm script.
+    publicPath: 'dist',
   },
 
   // to generate source map files (for debugging)
